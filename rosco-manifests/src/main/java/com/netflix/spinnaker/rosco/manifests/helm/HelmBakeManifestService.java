@@ -70,10 +70,15 @@ public class HelmBakeManifestService {
       env.cleanup();
     }
 
+    final String reference =
+        Base64.getEncoder()
+            .encodeToString(
+                utils.removeTestsDirectoryTemplates(bakeStatus.getOutputContent()).getBytes());
+
     return Artifact.builder()
         .type("embedded/base64")
         .name(request.getOutputArtifactName())
-        .reference(Base64.getEncoder().encodeToString(bakeStatus.getOutputContent().getBytes()))
+        .reference(reference)
         .build();
   }
 }

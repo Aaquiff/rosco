@@ -6,6 +6,7 @@ import com.netflix.spinnaker.rosco.manifests.TemplateUtils;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -67,5 +68,23 @@ public class HelmTemplateUtils extends TemplateUtils {
     result.setCommand(command);
 
     return result;
+  }
+
+  public String removeTestsDirectoryTemplates(String input) {
+    String manifestSeperator = "---";
+
+    ArrayList<String> inputManifests = new ArrayList<String>();
+    Collections.addAll(inputManifests, input.split(manifestSeperator));
+
+    final List<String> outputManifests =
+        inputManifests.stream()
+            .filter(
+                manifest -> !manifest.trim().isEmpty() && !manifest.contains("/templates/tests"))
+            .collect(Collectors.toList());
+
+    StringBuilder stringBuilder = new StringBuilder();
+    outputManifests.stream()
+        .forEach(manifest -> stringBuilder.append(manifestSeperator).append(manifest));
+    return stringBuilder.toString();
   }
 }
