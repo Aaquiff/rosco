@@ -10,7 +10,11 @@ import com.netflix.spinnaker.rosco.manifests.TemplateUtils.BakeManifestEnvironme
 import com.netflix.spinnaker.security.AuthenticatedRequest;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -73,7 +77,25 @@ public class HelmBakeManifestService {
     return Artifact.builder()
         .type("embedded/base64")
         .name(request.getOutputArtifactName())
-        .reference(Base64.getEncoder().encodeToString(bakeStatus.getOutputContent().getBytes()))
+        .reference(Base64.getEncoder().encodeToString(removeTestsDirectoryTemplates(bakeStatus.getOutputContent()).getBytes()))
         .build();
+  }
+
+  public String removeTestsDirectoryTemplates(String input) {
+    String manifestSeperator = "---";
+
+    ArrayList<String> inputManifests = new ArrayList<String>();
+    Collections.addAll(inputManifests, input.split(manifestSeperator));
+
+    final List<String> outputManifests =
+            inputManifests.stream()
+                    .filter(
+                            manifest -> !manifest.trim().isEmpty() && !manifest.contains("/templates/tests"))
+                    .collect(Collectors.toList());
+
+    StringBuilder stringBuilder = new StringBuilder();
+    outputManifests.stream()
+            .forEach(manifest -> stringBuilder.append(manifestSeperator).append(manifest));
+    return stringBuilder.toString();
   }
 }
